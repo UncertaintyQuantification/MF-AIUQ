@@ -1,0 +1,109 @@
+---
+title: "MF-AIUQ Examples"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+date: "`r Sys.Date()`"
+vignette: >
+  %\VignetteIndexEntry{MF-AIUQ Examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  out.width = "90%"
+)
+```
+
+```{r packages, message=FALSE, warning=FALSE}
+library(AIUQ)
+```
+
+## Example 1: Model-free MSD estimation for simulated Brownian motion
+
+Simulate Brownian motion and estimate its MSD without specifying a parametric form for the MSD. 
+Set `uncertainty = TRUE` to obtain the 95% confidence interval, shown as the shaded region.
+
+```{r simulation_bm, fig.height=8, fig.width=8}
+set.seed(2)
+
+sim_bm <- simulation(sz = 300, len_t = 300, sigma_bm = 0.5, model_name = "BM")
+
+sam_mf <- SAM(sim_object = sim_bm, model_free_estimation = TRUE, uncertainty = TRUE)
+
+par(mfrow = c(2, 2), mar = c(5, 4, 4, 2))
+plot_traj(sim_bm) # plot trajectory
+plot_MSD(object = sam_mf, msd_truth = sam_mf@msd_truth, title = "True vs. Estimated MSD") # plot MSD
+isf <- calculate_ISF(sam_mf)
+# users can select indices of q for plot
+plot_ISF(isf, index_q = c(1, 5, 10, 15, 20, 30, 40))
+```
+
+
+## Example 2: Model-free MSD estimation for simulated Ornstein–Uhlenbeck process
+
+
+```{r simulation_ou, fig.height=4, fig.width=8}
+set.seed(2)
+
+sim_ou <- simulation(sz = 300, len_t = 300, sigma_ou = 4, rho = 0.95, model_name = "OU")
+
+sam_mf <- SAM(sim_object = sim_ou, model_free_estimation = TRUE, uncertainty = TRUE)
+
+par(mfrow = c(1, 2))
+plot_traj(sim_ou)
+plot_MSD(object = sam_mf, msd_truth = sam_mf@msd_truth, title = "True vs. Estimated MSD")
+```
+
+
+## Example 3: Model-free MSD estimation for experimental data
+
+Load a microscopy video and specify the minimum lag time and pixel size.
+
+```{r experimental-msd, warning=FALSE, fig.height=8, fig.width=8.5}
+library(bioimagetools)
+
+intensity <- readTIF("data/example_video.tif")
+
+mindt <- 6   # minimum lag time
+pxsz <- 0.1465   # pixel size
+M <- 200  # number of particles
+# For experimental data, the number of particles need to be specified to obtain
+# the 95% confidence interval.
+sam_mf <- SAM(intensity = intensity, intensity_str = "SST_array", mindt = mindt, pxsz = pxsz, 
+              M = M, model_free_estimation = TRUE, uncertainty = TRUE)
+
+lag_time <- sam_mf@d_input
+MSD_est <- sam_mf@msd_est
+MSD_lower <- sam_mf@msd_lower
+MSD_upper <- sam_mf@msd_upper
+
+par(mfrow = c(2, 2), mar = c(5, 4, 4, 2))
+plot_intensity(intensity, intensity_str = "SST_array", frame = 1)
+plot_intensity(intensity, intensity_str = "SST_array", frame = 50)
+plot_MSD(object = sam_mf, title = "Estimated MSD")
+```
+
+
+## Example 4: Estimate storage and loss moduli
+
+Storage and loss moduli can be estimated using MSD and its confidence interval through
+the generalized Stokes–Einstein relation.
+
+```{r moduli, fig.height=3, fig.width=4}
+moduli <- Get_Gp_Gpp_GSER(MSD_est = sam_mf@msd_est, d_input = sam_mf@d_input, 
+                          MSD_lower = sam_mf@msd_lower, MSD_upper = sam_mf@msd_upper,
+                          MSD_unit = 1e-12,  # square micrometers to square meters
+                          Temp = 293,     # absolute temperature in kelvin
+                          a = 250e-9      # particle radius in meters
+)
+
+plot_moduli(moduli, units = c("rad/s", "Pa"), title = "Estimated Storage and Loss Moduli")
+```
+
+
