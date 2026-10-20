@@ -1,4 +1,4 @@
-# MF-AIUQ: Model-Free *Ab Initio* Uncertainty Quantification in Scattering analysis of Microscopy
+# MF-AIUQ: Model-Free *Ab Initio* Uncertainty Quantification in Scattering Analysis of Microscopy
 
 
 [![R](https://img.shields.io/badge/R-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
@@ -18,6 +18,8 @@ This repository provides the code used to reproduce the simulation and experimen
 Lin, T., Lee, J., Helgeson, M., Valentine, M. T., Luo, Y., & Gu, M. (2026). Model-free estimation in scattering analysis of microscopy. *arXiv:2605.29424*.
 
 The article is available on [arXiv](https://arxiv.org/abs/2605.29424).
+
+The code is prepared by Tong Lin and Mengyang Gu.
 
 MF-AIUQ estimates the mean squared displacement (MSD) and its uncertainty directly from microscopy videos. 
 The estimated MSD and confidence interval can be used to further compute the viscoelastic storage and loss moduli through the generalized
